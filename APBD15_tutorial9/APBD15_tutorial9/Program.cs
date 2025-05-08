@@ -9,6 +9,9 @@ public class Program
         // Add services to the container.
         builder.Services.AddAuthorization();
 
+        //added controllers
+        builder.Services.AddControllers();
+        
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddOpenApi();
 
@@ -23,6 +26,8 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
+        
+        app.MapControllers();
         
         app.Run();
     }
