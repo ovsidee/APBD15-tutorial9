@@ -86,7 +86,14 @@ public class WarehouseService : IWarehouseService
         await com.ExecuteNonQueryAsync(cancellationToken);
         
         //--------------------------------------------5
+        com.CommandText = @"SELECT Price FROM Product WHERE IdProduct = @IdProduct;";
+        com.Parameters.Clear();
+        com.Parameters.AddWithValue("IdProduct", productWarehouseDto.IdProduct);
         
+        var priceResult = await com.ExecuteScalarAsync(cancellationToken);
+        decimal unitPrice = (decimal)priceResult;
+        decimal totalPrice = unitPrice * productWarehouseDto.Amount;
+        //TODO 5-th (insert to Product_Warehouse) and 6-th step (lecture)
         
         return "Success";
     }
