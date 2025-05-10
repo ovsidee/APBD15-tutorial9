@@ -9,9 +9,9 @@ namespace APBD15_tutorial9.Controllers;
 [ApiController]
 public class WarehouseController : ControllerBase
 {
-    private readonly WarehouseService _service;
+    private readonly IWarehouseService _service;
     
-    public WarehouseController(WarehouseService service)
+    public WarehouseController(IWarehouseService service)
     {
         _service = service;
     }

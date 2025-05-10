@@ -10,8 +10,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddAuthorization();
-        
-        builder.Services.AddScoped<WarehouseService>();
+
+        builder.Services.AddScoped<IWarehouseService, WarehouseService>();
         
         //added controllers
         builder.Services.AddControllers();
