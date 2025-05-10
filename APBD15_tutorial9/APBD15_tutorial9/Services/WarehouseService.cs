@@ -1,6 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Data;
 using APBD15_tutorial9.Models;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 
 namespace APBD15_tutorial9.Services;
@@ -14,7 +13,7 @@ public class WarehouseService : IWarehouseService
         _configuration = configuration;
     }
 
-    public async Task<(string status, decimal? idResult)> AcceptData([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken)
+    public async Task<(string status, decimal? idResult)> AcceptData(ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken)
     {
         if (productWarehouseDto.IdProduct < 0 || productWarehouseDto.IdWarehouse < 0 || productWarehouseDto.Amount <= 0)
         {
@@ -50,7 +49,7 @@ public class WarehouseService : IWarehouseService
         {
             com.Connection = con;
             com.CommandText = @"SELECT COUNT(*) FROM [Order] 
-                            WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt <= @CreatedAt;";
+                            WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt < @CreatedAt;";
             com.Parameters.AddWithValue("IdProduct", productWarehouseDto.IdProduct);
             com.Parameters.AddWithValue("Amount", productWarehouseDto.Amount);
             com.Parameters.AddWithValue("CreatedAt", productWarehouseDto.CreatedAt);
@@ -69,7 +68,7 @@ public class WarehouseService : IWarehouseService
                             WHERE IdOrder = (
                                 SELECT IdOrder 
                                 FROM [Order] 
-                                WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt <= @CreatedAt
+                                WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt < @CreatedAt
                             );";
             com.Parameters.AddWithValue("IdProduct", productWarehouseDto.IdProduct);
             com.Parameters.AddWithValue("Amount", productWarehouseDto.Amount);
@@ -113,7 +112,7 @@ public class WarehouseService : IWarehouseService
         {
             com.Connection = con;
             com.CommandText = @"SELECT IdOrder FROM [Order] 
-                                WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt <= @CreatedAt;";
+                                WHERE IdProduct = @IdProduct AND Amount = @Amount AND CreatedAt < @CreatedAt;";
             com.Parameters.AddWithValue("IdProduct", productWarehouseDto.IdProduct);
             com.Parameters.AddWithValue("Amount", productWarehouseDto.Amount);
             com.Parameters.AddWithValue("CreatedAt", productWarehouseDto.CreatedAt);
@@ -143,4 +142,50 @@ public class WarehouseService : IWarehouseService
         return ("Success", idInsertedInDataBase);
     }
 
+    public async Task<(string status, decimal? idResult)> AcceptDataWithProcedure(ProductWarehouseDto dto, CancellationToken cancellationToken)
+    {
+        if (dto.IdProduct < 0 || dto.IdWarehouse < 0 || dto.Amount <= 0)
+            return ("LessThanZero", null);
+
+        try
+        {
+            await using var connection = new SqlConnection(_configuration.GetConnectionString("ConnectionString"));
+            await using (SqlCommand com = new SqlCommand())
+            {
+                com.Connection = connection;
+                com.CommandText = "AddProductToWarehouse";
+                com.CommandType = CommandType.StoredProcedure;
+
+                com.Parameters.AddWithValue("@IdProduct", dto.IdProduct);
+                com.Parameters.AddWithValue("@IdWarehouse", dto.IdWarehouse);
+                com.Parameters.AddWithValue("@Amount", dto.Amount);
+                com.Parameters.AddWithValue("@CreatedAt", dto.CreatedAt);
+
+                await connection.OpenAsync(cancellationToken);
+                var result = await com.ExecuteScalarAsync(cancellationToken);
+
+                if (result is decimal newId)
+                    return ("Success", newId);
+                
+                return ("Unknown", null);
+            }
+        }
+        catch (SqlException e)
+        {
+            if (e.Message.Contains("IdProduct does not exist", StringComparison.OrdinalIgnoreCase))
+                return ("IdProduct", null);
+            if (e.Message.Contains("IdWarehouse does not exist", StringComparison.OrdinalIgnoreCase))
+                return ("IdWarehouse", null);
+            if (e.Message.Contains("no order", StringComparison.OrdinalIgnoreCase))
+                return ("OrderDoesNotExist", null);
+            if (e.Message.Contains("already fulfilled", StringComparison.OrdinalIgnoreCase))
+                return ("OrderAlreadyFulfilled", null);
+        }  
+        catch (Exception)
+        {
+            return ("Unknown", null);
+        }
+        
+        return ("Unknown", null);
+    }
 }

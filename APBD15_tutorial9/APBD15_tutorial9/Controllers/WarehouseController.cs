@@ -32,4 +32,20 @@ public class WarehouseController : ControllerBase
             _ => StatusCode(500, "An unknown error occurred while processing the request.")
         };
     }
+    
+    [HttpPost("procedure")]
+    public async Task<IActionResult> AcceptDataWithProcedure([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken)
+    {
+        var (status, idResult) = await _service.AcceptDataWithProcedure(productWarehouseDto, cancellationToken);
+        return status switch
+        {
+            "LessThanZero" => BadRequest("IdProduct or IdWarehouse less than zero. Or amount less or equal to zero"),
+            "IdProduct" => NotFound("Product with provided ID does not exist!"),
+            "IdWarehouse" => NotFound("Warehouse with provided ID does not exist!"),
+            "OrderDoesNotExist" => NotFound("No record found in Order table with IdProduct and Amount from request and CreatedAt provided."),
+            "OrderAlreadyFulfilled" => Conflict("Order is already fulfilled!"),
+            "Success" => CreatedAtAction(nameof(AcceptDataWithProcedure), new {id = idResult}),
+            _ => StatusCode(500, "An unknown error occurred while processing the request.")
+        };
+    }
 }

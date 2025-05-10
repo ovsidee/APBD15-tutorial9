@@ -10,7 +10,8 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddAuthorization();
-
+        
+        //to use DI
         builder.Services.AddScoped<IWarehouseService, WarehouseService>();
         
         //added controllers

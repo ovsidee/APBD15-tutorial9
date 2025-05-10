@@ -1,10 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-using APBD15_tutorial9.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using APBD15_tutorial9.Models;
 
 namespace APBD15_tutorial9.Services;
 
 public interface IWarehouseService
 {
-    public Task<(string status, decimal? idResult)> AcceptData([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken);
+    public Task<(string status, decimal? idResult)> AcceptData(ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken);
+    public Task<(string status, decimal? idResult)> AcceptDataWithProcedure(ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken);
 }
