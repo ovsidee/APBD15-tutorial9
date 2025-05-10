@@ -1,3 +1,5 @@
+using APBD15_tutorial9.Services;
+
 namespace APBD15_tutorial9;
 
 public class Program
@@ -8,7 +10,9 @@ public class Program
 
         // Add services to the container.
         builder.Services.AddAuthorization();
-
+        
+        builder.Services.AddScoped<WarehouseService>();
+        
         //added controllers
         builder.Services.AddControllers();
         

@@ -19,17 +19,17 @@ public class WarehouseController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AcceptData([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken)
     {
-        var result = await _service.AcceptData(productWarehouseDto, cancellationToken);
+        var (status, idResult) = await _service.AcceptData(productWarehouseDto, cancellationToken);
 
-        return result switch
+        return status switch
         {
             "LessThanZero" => BadRequest("IdProduct or IdWarehouse less than zero. Or amount less or equal to zero"),
-            "IdProduct" => BadRequest("Product with provided ID does not exist!"),
-            "IdWarehouse" => BadRequest("Warehouse with provided ID does not exist!"),
-            "OrderDoesNotExist" => BadRequest("No record found in Order table with IdProduct and Amount from request and CreatedAt provided."),
-            "OrderAlreadyFulfilled" => BadRequest("Order is already fulfilled!"),
-            "Success" => Ok("success!"),
-            _ => StatusCode(500, "An error occurred while registering the client.")
+            "IdProduct" => NotFound("Product with provided ID does not exist!"),
+            "IdWarehouse" => NotFound("Warehouse with provided ID does not exist!"),
+            "OrderDoesNotExist" => NotFound("No record found in Order table with IdProduct and Amount from request and CreatedAt provided."),
+            "OrderAlreadyFulfilled" => Conflict("Order is already fulfilled!"),
+            "Success" => CreatedAtAction(nameof(AcceptData), new {id = idResult}),
+            _ => StatusCode(500, "An unknown error occurred while processing the request.")
         };
     }
 }

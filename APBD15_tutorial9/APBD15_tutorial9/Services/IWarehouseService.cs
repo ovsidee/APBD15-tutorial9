@@ -6,5 +6,5 @@ namespace APBD15_tutorial9.Services;
 
 public interface IWarehouseService
 {
-    public Task<string> AcceptData([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken);
+    public Task<(string status, decimal? idResult)> AcceptData([FromBody][Required] ProductWarehouseDto productWarehouseDto, CancellationToken cancellationToken);
 }
